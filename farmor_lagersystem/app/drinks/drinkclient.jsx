@@ -19,6 +19,7 @@ function formatDate(timestamp) {
 
 export default function DrinksPage() {
   const [items, setItems] = useState([])
+  const [search, setSearch] = useState("")
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function DrinksPage() {
         saved.map((item) => ({
           id: makeId(),
           name: item.name || "",
+          price: item.price || "",
           number: typeof item.number === "number" ? item.number : 0,
           history: Array.isArray(item.history) ? item.history : [],
           showHistory: false,
@@ -48,8 +50,9 @@ export default function DrinksPage() {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify(
-        items.map(({ name, number, history }) => ({
+        items.map(({ name, price, number, history }) => ({
           name,
+          price,
           number,
           history,
         }))
@@ -63,6 +66,7 @@ export default function DrinksPage() {
       {
         id: makeId(),
         name: "",
+        price: "",
         number: 0,
         history: [],
         showHistory: false,
@@ -77,7 +81,7 @@ export default function DrinksPage() {
   }
 
   const handleDelete = (id) => {
-    const confirmed = window.confirm("Er du sikker på, at du vil slette den?")
+    const confirmed = true
     if (confirmed) {
       setItems((prev) => prev.filter((item) => item.id !== id))
     }
@@ -110,20 +114,32 @@ export default function DrinksPage() {
     )
   }
 
-  const visibleItems = useMemo(
-    () =>
-      items.map((item) => ({
+  const visibleItems = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase()
+
+    return items
+      .map((item) => ({
         ...item,
         history: item.history.filter((entry) => Date.now() - entry.time < WEEK_MS),
-      })),
-    [items]
-  )
+      }))
+      .filter((item) => {
+        if (!normalizedSearch) return true
+        return item.name.toLowerCase().includes(normalizedSearch)
+      })
+  }, [items, search])
 
   return (
     <main id="drink_list">
       <button id="knap" type="button" onClick={addItem}>
         tilføj en drik
       </button>
+      <input
+        className="search"
+        type="text"
+        placeholder="Søg efter navn"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
 
       {visibleItems.length === 0 ? (
         <p>Ingen drikkevarer endnu. Klik på knappen for at tilføje en drik.</p>
@@ -141,8 +157,13 @@ export default function DrinksPage() {
               value={item.name}
               onChange={(event) => updateItem(item.id, { name: event.target.value })}
             />
-
-            <p className="number">number: {item.number}</p>
+            <input
+              className="pris"
+              type="text"
+              placeholder="pris"
+              value={item.price}
+              onChange={(event) => updateItem(item.id, { price: event.target.value })}
+            />
 
             <div>
               <button
@@ -201,9 +222,9 @@ export default function DrinksPage() {
           </div>
         ))
       )}
-      <form action={logout}>
-    <button>Log ud</button>
-</form>
+      <form action={logout} className="logoutForm">
+        <button type="submit" className="logoutButton">Log ud</button>
+      </form>
     </main>
   )
 }
