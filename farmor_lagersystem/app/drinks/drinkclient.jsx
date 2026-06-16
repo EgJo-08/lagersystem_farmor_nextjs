@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react"
 import { redirect } from "next/navigation";
 import logout from "../action"
 
-
+const RESET_KEY = "drinkTrackerLastReset";
+const REMINDER_KEY = "drinkTrackerReminderDismissed";
 const STORAGE_KEY = "drinkTracker"
-const WEEK_MS = 1000 * 60 * 60 * 24 * 7
+const YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -76,6 +77,46 @@ export default function DrinksPage() {
     ])
   }
 
+const [showReminder, setShowReminder] = useState(false);
+
+useEffect(() => {
+  if (!isLoaded) return;
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+
+console.log({
+  month,
+  day,
+  year,
+  reminder: localStorage.getItem(REMINDER_KEY),
+});
+  if (
+    month === 5 &&
+    day >= 25 &&
+    localStorage.getItem(REMINDER_KEY) !== String(year)
+  ) {
+    setShowReminder(true);
+  }
+
+
+  if (month === 6 && day >= 2) {
+    const lastResetYear = localStorage.getItem(RESET_KEY);
+
+    if (lastResetYear !== String(year)) {
+      setItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          history: [],
+        }))
+      );
+
+      localStorage.setItem(RESET_KEY, String(year));
+    }
+  }
+}, [isLoaded]);
   const updateItem = (id, changes) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)))
   }
@@ -101,7 +142,7 @@ export default function DrinksPage() {
             value: numericValue,
             time: Date.now(),
           },
-        ].filter((entry) => Date.now() - entry.time < WEEK_MS)
+        ].filter((entry) => Date.now() - entry.time < YEAR_MS)
 
         return {
           ...item,
@@ -113,6 +154,53 @@ export default function DrinksPage() {
       })
     )
   }
+  const printHistory = () => {
+const html = `
+<h1>Årsrapport ${new Date().getFullYear()}</h1>
+
+${items
+  .map(
+    (item) => `
+      <section style="margin-bottom: 30px;">
+        <h2>${item.name}</h2>
+
+        ${
+          item.history.length
+            ? item.history
+                .map(
+                  (entry) => `
+                    <div>
+                      ${entry.type}${entry.value}
+                      -
+                      ${new Date(entry.time).toLocaleString()}
+                    </div>
+                  `
+                )
+                .join("")
+            : "<div>Ingen historik</div>"
+        }
+      </section>
+    `
+  )
+  .join("")}
+`;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Historik</title>
+      </head>
+      <body>
+        ${html}
+      </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
+};
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -120,7 +208,7 @@ export default function DrinksPage() {
     return items
       .map((item) => ({
         ...item,
-        history: item.history.filter((entry) => Date.now() - entry.time < WEEK_MS),
+        history: item.history.filter((entry) => Date.now() - entry.time < YEAR_MS),
       }))
       .filter((item) => {
         if (!normalizedSearch) return true
@@ -130,6 +218,35 @@ export default function DrinksPage() {
 
   return (
     <main id="drink_list">
+          {showReminder && (
+    <div
+      style={{
+        background: "#fff3cd",
+        border: "1px solid #ffe69c",
+        padding: "12px",
+        marginBottom: "16px",
+        borderRadius: "8px",
+      }}
+    >
+      <p>
+        Husk at printe og gemme årsrapporten inden historikken nulstilles den 2.
+        juli.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => {
+          localStorage.setItem(
+            REMINDER_KEY,
+            String(new Date().getFullYear())
+          );
+          setShowReminder(false);
+        }}
+      >
+        Luk
+      </button>
+    </div>
+  )}
       <button id="knap" type="button" onClick={addItem}>
         tilføj en drik
       </button>
@@ -164,6 +281,9 @@ export default function DrinksPage() {
               value={item.price}
               onChange={(event) => updateItem(item.id, { price: event.target.value })}
             />
+            
+
+            <p>Number:{item.number}</p>
 
             <div>
               <button
@@ -224,7 +344,14 @@ export default function DrinksPage() {
       )}
       <form action={logout} className="logoutForm">
         <button type="submit" className="logoutButton">Log ud</button>
+        <button type="button" onClick={printHistory}>
+  Download PDF
+</button>
       </form>
     </main>
   )
+
+
+
+  
 }
