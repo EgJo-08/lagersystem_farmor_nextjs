@@ -18,6 +18,56 @@ function formatDate(timestamp) {
   return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
 }
 
+const exportBackup = () => {
+  const data = localStorage.getItem(STORAGE_KEY) || "[]";
+
+  const blob = new Blob([data], {
+    type: "application/json",
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `drink-backup-${new Date().toISOString().split("T")[0]}.json`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
+
+const importBackup = (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!confirm("Importing will replace all current data. Continue?")) {
+  return;
+}
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+
+      if (!Array.isArray(imported)) {
+        throw new Error("Invalid format");
+      }
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(imported)
+      );
+
+      window.location.reload();
+    } catch {
+      alert("Invalid backup file");
+    }
+  };
+
+  reader.readAsText(file);
+};
+
+
+
 export default function DrinksPage() {
   const [items, setItems] = useState([])
   const [search, setSearch] = useState("")
@@ -36,9 +86,11 @@ export default function DrinksPage() {
           price: item.price || "",
           number: typeof item.number === "number" ? item.number : 0,
           history: Array.isArray(item.history) ? item.history : [],
+          notes: Array.isArray(item.notes) ? item.notes : [],
           showHistory: false,
           action: null,
           inputValue: "",
+          noteInput: "",
         }))
       )
     }
@@ -51,11 +103,12 @@ export default function DrinksPage() {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify(
-        items.map(({ name, price, number, history }) => ({
+        items.map(({ name, price, number, history, notes }) => ({
           name,
           price,
           number,
           history,
+          notes,
         }))
       )
     )
@@ -70,9 +123,11 @@ export default function DrinksPage() {
         price: "",
         number: 0,
         history: [],
+        notes: [],
         showHistory: false,
         action: null,
         inputValue: "",
+        noteInput: "",
       },
     ])
   }
@@ -126,6 +181,41 @@ console.log({
     if (confirmed) {
       setItems((prev) => prev.filter((item) => item.id !== id))
     }
+  }
+
+  const handleAddNote = (id) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item
+
+        const noteText = item.noteInput?.trim()
+        if (!noteText) return item
+
+        return {
+          ...item,
+          notes: [
+            ...item.notes,
+            {
+              id: makeId(),
+              text: noteText,
+            },
+          ],
+          noteInput: "",
+        }
+      })
+    )
+  }
+
+  const handleDeleteNote = (itemId, noteId) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item
+        return {
+          ...item,
+          notes: item.notes.filter((note) => note.id !== noteId),
+        }
+      })
+    )
   }
 
   const handleAddOrRemove = (id, type, value) => {
@@ -201,6 +291,47 @@ ${items
   win.document.close();
   win.print();
 };
+
+
+  const printValue = () => {
+const html = `
+<h1>Årsrapport ${new Date().getFullYear()}</h1>
+
+${items
+  .map(
+    (item) => `
+      <section style="margin-bottom: 30px;">
+        <h2>${item.name}</h2>
+
+        <p>Number:${
+          item.number
+        }</p>
+        <p>enlig værdi: ${item.price}kr</p>
+        <p>Total Værdi:${item.number * item.price}kr</p>
+  
+      </section>
+    `
+  )
+  .join("")}
+`;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Historik</title>
+      </head>
+      <body>
+        ${html}
+      </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
+};
+
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -284,6 +415,7 @@ ${items
             
 
             <p>Number:{item.number}</p>
+            <p>Pris totalt:{item.number * item.price}kr</p>
 
             <div>
               <button
@@ -302,6 +434,39 @@ ${items
                 historik
               </button>
             </div>
+            <div className="note-felt">
+              <div className="note-input-row">
+                <input
+                  className="noteInput"
+                  type="text"
+                  placeholder="notater"
+                  value={item.noteInput}
+                  onChange={(event) => updateItem(item.id, { noteInput: event.target.value })}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return
+                    event.preventDefault()
+                    handleAddNote(item.id)
+                  }}
+                />
+                <button type="button" onClick={() => handleAddNote(item.id)}>
+                  gem note
+                </button>
+              </div>
+
+              {item.notes.length > 0 && (
+                <div className="noteList">
+                  {item.notes.map((note) => (
+                    <div key={note.id} className="noteItem">
+                      <span>{note.text}</span>
+                      <button type="button" className="noteDeleteButton" onClick={() => handleDeleteNote(item.id, note.id)}>
+                        slet
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
 
             {item.action && (
               <div>
@@ -345,8 +510,17 @@ ${items
       <form action={logout} className="logoutForm">
         <button type="submit" className="logoutButton">Log ud</button>
         <button type="button" onClick={printHistory}>
-  Download PDF
+  Download historik PDF
 </button>
+<button type="button" onClick={printValue}>download beholdnings liste</button>
+<button type="button" onClick={exportBackup}>
+  exporter information
+</button>
+<input
+  type="file"
+  accept=".json"
+  onChange={importBackup}
+/>
       </form>
     </main>
   )
