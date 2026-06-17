@@ -1,8 +1,6 @@
 "use server"
 
 import z from "zod"
-import fs from "fs/promises"
-import path from "path"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -30,17 +28,24 @@ export async function LoginAction(previousState, formdata) {
         }
     }
 
-    const filePath = path.join(
-        process.cwd(),
-        "app",
-        "password.json"
-    )
+    const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.NEXTAUTH_URL ||
+        "http://localhost:3000"
 
-    const file = await fs.readFile(filePath, "utf8")
+    const res = await fetch(`${baseUrl}/password.json`, { cache: "no-store" })
+    if (!res.ok) {
+        return {
+            values: { password },
+            errors: {
+                form: ["Kunne ikke indlæse adgangskoder"],
+            },
+        }
+    }
 
-    const passwords = JSON.parse(file)
-
-    const validPasswords = passwords.map((item) => item.password)
+    const data = await res.json()
+    const validPasswords = data.map((item) => item.password)
 
     if (!validPasswords.includes(password)) {
         return {
