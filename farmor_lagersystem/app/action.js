@@ -3,6 +3,8 @@
 import z from "zod"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import fs from "fs/promises"
+import path from "path"
 
 const loginSchema = z.object({
     password: z.string().min(1, "Indtast adgangskoden"),
@@ -28,33 +30,31 @@ export async function LoginAction(previousState, formdata) {
         }
     }
 
-    const baseUrl =
-        process.env.NEXT_PUBLIC_BASE_URL ||
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        process.env.NEXTAUTH_URL ||
-        "http://localhost:3000"
+let data
 
-    const res = await fetch(`${baseUrl}/password.json`, { cache: "no-store" })
-    if (!res.ok) {
-        return {
-            values: { password },
-            errors: {
-                form: ["Kunne ikke indlæse adgangskoder"],
-            },
-        }
+try {
+    const filePath = path.join(process.cwd(), "public", "password.json")
+    const file = await fs.readFile(filePath, "utf-8")
+    data = JSON.parse(file)
+} catch (err) {
+    return {
+        values: { password },
+        errors: {
+            form: ["Kunne ikke indlæse adgangskoder"],
+        },
     }
+}
 
-    const data = await res.json()
-    const validPasswords = data.map((item) => item.password)
+const validPasswords = data.map((item) => item.password)
 
-    if (!validPasswords.includes(password)) {
-        return {
-            values: { password },
-            errors: {
-                form: ["forkert kode"],
-            },
-        }
+if (!validPasswords.includes(password)) {
+    return {
+        values: { password },
+        errors: {
+            form: ["forkert kode"],
+        },
     }
+}
 
     const cookieStore = await cookies()
 
