@@ -36,7 +36,7 @@ body {
 
 #drink_list {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
     padding-bottom: 90px;
 }
@@ -92,7 +92,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 350px;
+        max-width: 530px;
+    width: 100%;
 }
 
 .preview {

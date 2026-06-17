@@ -177,11 +177,14 @@ console.log({
   }
 
   const handleDelete = (id) => {
-    const confirmed = true
-    if (confirmed) {
-      setItems((prev) => prev.filter((item) => item.id !== id))
-    }
+  if (
+    confirm("Er du sikker på at du gerne vil slette den her?")
+  ) {
+    setItems((prev) =>
+      prev.filter((item) => item.id !== id)
+    );
   }
+};
 
   const handleAddNote = (id) => {
     setItems((prev) =>
