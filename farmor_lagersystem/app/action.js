@@ -19,7 +19,7 @@ export default async function logout() {
 }
 
 export async function LoginAction(previousState, formdata) {
-    const password = formdata.get("password")
+    const password = formdata.get("password")?.toString().trim()
 
     const result = loginSchema.safeParse({ password })
 
@@ -45,7 +45,9 @@ try {
     }
 }
 
-const validPasswords = data.map((item) => item.password)
+const validPasswords = data.map((item) =>
+    item.password?.toString().trim()
+)
 
 if (!validPasswords.includes(password)) {
     return {
