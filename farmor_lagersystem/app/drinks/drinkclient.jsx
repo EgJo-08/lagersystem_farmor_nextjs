@@ -38,8 +38,8 @@ const importBackup = (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
   if (!confirm("Importing will replace all current data. Continue?")) {
-  return;
-}
+    return;
+  }
 
   const reader = new FileReader();
 
@@ -131,59 +131,59 @@ export default function DrinksPage() {
     ])
   }
 
-const [showReminder, setShowReminder] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
 
-useEffect(() => {
-  if (!isLoaded) return;
+  useEffect(() => {
+    if (!isLoaded) return;
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const day = now.getDate();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate();
 
-console.log({
-  month,
-  day,
-  year,
-  reminder: localStorage.getItem(REMINDER_KEY),
-});
-  if (
-    month === 5 &&
-    day >= 28 &&
-    localStorage.getItem(REMINDER_KEY) !== String(year)
-  ) {
-    setShowReminder(true);
-  }
-
-
-  if (month === 5 && day >= 30) {
-    const lastResetYear = localStorage.getItem(RESET_KEY);
-
-    if (lastResetYear !== String(year)) {
-      setItems((prev) =>
-        prev.map((item) => ({
-          ...item,
-          history: [],
-        }))
-      );
-
-      localStorage.setItem(RESET_KEY, String(year));
+    console.log({
+      month,
+      day,
+      year,
+      reminder: localStorage.getItem(REMINDER_KEY),
+    });
+    if (
+      month === 5 &&
+      day >= 28 &&
+      localStorage.getItem(REMINDER_KEY) !== String(year)
+    ) {
+      setShowReminder(true);
     }
-  }
-}, [isLoaded]);
+
+
+    if (month === 5 && day >= 30) {
+      const lastResetYear = localStorage.getItem(RESET_KEY);
+
+      if (lastResetYear !== String(year)) {
+        setItems((prev) =>
+          prev.map((item) => ({
+            ...item,
+            history: [],
+          }))
+        );
+
+        localStorage.setItem(RESET_KEY, String(year));
+      }
+    }
+  }, [isLoaded]);
   const updateItem = (id, changes) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)))
   }
 
   const handleDelete = (id) => {
-  if (
-    confirm("Er du sikker på at du gerne vil slette den her?")
-  ) {
-    setItems((prev) =>
-      prev.filter((item) => item.id !== id)
-    );
-  }
-};
+    if (
+      confirm("Er du sikker på at du gerne vil slette den her?")
+    ) {
+      setItems((prev) =>
+        prev.filter((item) => item.id !== id)
+      );
+    }
+  };
 
   const handleAddNote = (id) => {
     setItems((prev) =>
@@ -247,18 +247,17 @@ console.log({
     )
   }
   const printHistory = () => {
-const html = `
+    const html = `
 <h1>Årsrapport ${new Date().getFullYear()}</h1>
 
 ${items
-  .map(
-    (item) => `
+        .map(
+          (item) => `
       <section style="margin-bottom: 30px;">
         <h2>${item.name}</h2>
 
-        ${
-          item.history.length
-            ? item.history
+        ${item.history.length
+              ? item.history
                 .map(
                   (entry) => `
                     <div>
@@ -269,17 +268,17 @@ ${items
                   `
                 )
                 .join("")
-            : "<div>Ingen historik</div>"
-        }
+              : "<div>Ingen historik</div>"
+            }
       </section>
     `
-  )
-  .join("")}
+        )
+        .join("")}
 `;
 
-  const win = window.open("", "_blank");
+    const win = window.open("", "_blank");
 
-  win.document.write(`
+    win.document.write(`
     <html>
       <head>
         <title>Historik</title>
@@ -290,36 +289,35 @@ ${items
     </html>
   `);
 
-  win.document.close();
-  win.print();
-};
+    win.document.close();
+    win.print();
+  };
 
 
   const printValue = () => {
-const html = `
+    const html = `
 <h1>Årsrapport ${new Date().getFullYear()}</h1>
 
 ${items
-  .map(
-    (item) => `
+        .map(
+          (item) => `
       <section style="margin-bottom: 30px;">
         <h2>${item.name}</h2>
 
-        <p>Number:${
-          item.number
-        }</p>
+        <p>Number:${item.number
+            }</p>
         <p>enlig værdi: ${item.price}kr</p>
         <p>Total Værdi:${item.number * item.price}kr</p>
   
       </section>
     `
-  )
-  .join("")}
+        )
+        .join("")}
 `;
 
-  const win = window.open("", "_blank");
+    const win = window.open("", "_blank");
 
-  win.document.write(`
+    win.document.write(`
     <html>
       <head>
         <title>Historik</title>
@@ -330,9 +328,9 @@ ${items
     </html>
   `);
 
-  win.document.close();
-  win.print();
-};
+    win.document.close();
+    win.print();
+  };
 
 
   const visibleItems = useMemo(() => {
@@ -351,34 +349,34 @@ ${items
 
   return (
     <main id="drink_list">
-          {showReminder && (
-    <div
-      style={{
-        background: "#fff3cd",
-        border: "1px solid #ffe69c",
-        padding: "12px",
-        marginBottom: "16px",
-        borderRadius: "8px",
-      }}
-    >
-      <p>
-        Husk at printe og gemme årsrapporten inden historikken nulstilles den 30 Juni.
-      </p>
+      {showReminder && (
+        <div
+          style={{
+            background: "#fff3cd",
+            border: "1px solid #ffe69c",
+            padding: "12px",
+            marginBottom: "16px",
+            borderRadius: "8px",
+          }}
+        >
+          <p>
+            Husk at printe og gemme årsrapporten inden historikken nulstilles den 30 Juni.
+          </p>
 
-      <button
-        type="button"
-        onClick={() => {
-          localStorage.setItem(
-            REMINDER_KEY,
-            String(new Date().getFullYear())
-          );
-          setShowReminder(false);
-        }}
-      >
-        Luk
-      </button>
-    </div>
-  )}
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem(
+                REMINDER_KEY,
+                String(new Date().getFullYear())
+              );
+              setShowReminder(false);
+            }}
+          >
+            Luk
+          </button>
+        </div>
+      )}
       <button id="knap" type="button" onClick={addItem}>
         tilføj en drik
       </button>
@@ -413,7 +411,7 @@ ${items
               value={item.price}
               onChange={(event) => updateItem(item.id, { price: event.target.value })}
             />
-            
+
 
             <p>Number:{item.number}</p>
             <p>Pris totalt:{item.number * item.price}kr</p>
@@ -496,12 +494,14 @@ ${items
                 {item.history.length === 0 ? (
                   <p>Ingen historik endnu.</p>
                 ) : (
-                  item.history.map((entry, index) => (
-                    <p key={index}>
-                      {entry.type}
-                      {entry.value} — {formatDate(entry.time)}
-                    </p>
-                  ))
+                  [...item.history]
+                    .sort((a, b) => new Date(b.time) - new Date(a.time))
+                    .map((entry, index) => (
+                      <p key={index}>
+                        {entry.type}
+                        {entry.value} — {formatDate(entry.time)}
+                      </p>
+                    ))
                 )}
               </div>
             )}
@@ -511,22 +511,22 @@ ${items
       <form action={logout} className="logoutForm">
         <button type="submit" className="logoutButton">Log ud</button>
         <button type="button" onClick={printHistory}>
-  Download historik PDF
-</button>
-<button type="button" onClick={printValue}>download beholdnings liste</button>
-<button type="button" onClick={exportBackup}>
-  exporter information
-</button>
-<input
-  type="file"
-  accept=".json"
-  onChange={importBackup}
-/>
+          Download historik PDF
+        </button>
+        <button type="button" onClick={printValue}>download beholdnings liste</button>
+        <button type="button" onClick={exportBackup}>
+          exporter information
+        </button>
+        <input
+          type="file"
+          accept=".json"
+          onChange={importBackup}
+        />
       </form>
     </main>
   )
 
 
 
-  
+
 }

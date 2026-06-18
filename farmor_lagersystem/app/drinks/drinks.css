@@ -37,6 +37,7 @@ body {
 #drink_list {
     display: grid;
     grid-template-columns: repeat(2, minmax(280px, 1fr));
+    align-items: start;
     gap: 18px;
     padding-bottom: 90px;
     justify-content: center;
