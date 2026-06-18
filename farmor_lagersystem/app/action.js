@@ -3,8 +3,6 @@
 import z from "zod"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import fs from "fs/promises"
-import path from "path"
 
 const loginSchema = z.object({
     password: z.string().min(1, "Indtast adgangskoden"),
@@ -30,37 +28,27 @@ export async function LoginAction(previousState, formdata) {
         }
     }
 
-let data
+    const expectedPassword = process.env.LOGIN_PASSWORD?.toString().trim()
 
-try {
-    const filePath = path.join(process.cwd(), "public", "password.json")
-    const file = await fs.readFile(filePath, "utf-8")
-data = JSON.parse(file.replace(/^\uFEFF/, ""))
-} catch (err) {
-    return {
-        values: { password },
-        errors: {
-            form: ["Kunne ikke indlæse adgangskoder"],
-        },
+    if (!expectedPassword) {
+        return {
+            values: { password },
+            errors: {
+                form: ["Login er ikke konfigureret på serveren."],
+            },
+        }
     }
-}
-console.log("INPUT:", JSON.stringify(password))
-console.log("DATA:", data)
 
-const isValid = data.some(
-    (item) =>
-        item.password?.toString().trim() === password
-)
+    const isValid = password === expectedPassword
 
-if (!isValid) {
-    return {
-        values: { password },
-        errors: {
-            form: ["forkert kode"],
-        },
+    if (!isValid) {
+        return {
+            values: { password },
+            errors: {
+                form: ["forkert kode"],
+            },
+        }
     }
-}
-
 
     const cookieStore = await cookies()
 
