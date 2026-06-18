@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { redirect } from "next/navigation";
 import logout from "../action"
 
 const RESET_KEY = "drinkTrackerLastReset";
@@ -150,14 +149,14 @@ console.log({
 });
   if (
     month === 5 &&
-    day >= 25 &&
+    day >= 28 &&
     localStorage.getItem(REMINDER_KEY) !== String(year)
   ) {
     setShowReminder(true);
   }
 
 
-  if (month === 6 && day >= 2) {
+  if (month === 5 && day >= 30) {
     const lastResetYear = localStorage.getItem(RESET_KEY);
 
     if (lastResetYear !== String(year)) {
@@ -363,8 +362,7 @@ ${items
       }}
     >
       <p>
-        Husk at printe og gemme årsrapporten inden historikken nulstilles den 2.
-        juli.
+        Husk at printe og gemme årsrapporten inden historikken nulstilles den 30 Juni.
       </p>
 
       <button
