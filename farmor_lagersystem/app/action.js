@@ -35,7 +35,7 @@ let data
 try {
     const filePath = path.join(process.cwd(), "public", "password.json")
     const file = await fs.readFile(filePath, "utf-8")
-    data = JSON.parse(file)
+data = JSON.parse(file.replace(/^\uFEFF/, ""))
 } catch (err) {
     return {
         values: { password },
@@ -44,12 +44,15 @@ try {
         },
     }
 }
+console.log("INPUT:", JSON.stringify(password))
+console.log("DATA:", data)
 
-const validPasswords = data.map((item) =>
-    item.password?.toString().trim()
+const isValid = data.some(
+    (item) =>
+        item.password?.toString().trim() === password
 )
 
-if (!validPasswords.includes(password)) {
+if (!isValid) {
     return {
         values: { password },
         errors: {
@@ -57,6 +60,7 @@ if (!validPasswords.includes(password)) {
         },
     }
 }
+
 
     const cookieStore = await cookies()
 
